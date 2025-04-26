@@ -138,7 +138,55 @@ bool ImportCell1Ds(TriangularMesh& mesh)
 // ***************************************************************************
 bool ImportCell2Ds(TriangularMesh& mesh)
 {
-    return false;
+    ifstream file("./Cell2Ds.csv");
+
+    if(file.fail())
+        return false;
+
+    list<string> listLines;
+    string line;
+
+    while(getLine(file, line))
+        listLines.push_back(line);
+
+    file.close();
+
+    //remove header
+    listLines.pop_front();
+
+    mesh.NumCell2Ds = listLines.size();
+    
+    if(mesh.NumCell2Ds == 0)
+    {
+        cerr << "There is no cell 2d" << endl;
+        return false;
+    }
+
+    mesh.Cell2DsId.reserve(mesh.NumCell2Ds);
+    mesh.Cell2DsVertices.reserve(mesh.NumCell2Ds);
+    mesh.Cell2DsEdges.reserve(mesh.NemCell2Ds);
+
+    for(const string& line : listLines)
+    {
+        istringstream converter(line);
+
+        unsigned int id;
+        array<unsigned int, 3> vertices;
+        array<unsigned int, 3> edges;
+
+        converter >> id;
+        for(unsigned int i = 0; i < 3; i++)
+            converter >> vertices[i];
+        for(unsigned int i = 0; i < 3; i++)
+            converter >> edges[i];
+
+        mesh.Cell2DsId.push_back(id);
+        mesh.Cell2DsVertices.push_back(vertices);
+        mesh.Cell2DsEdges.push_back(edges);
+    }
+
+    return true;
+
 }
 
 }
