@@ -14,4 +14,8 @@ namespace PolygonalLibrary
     bool ImportCell1Ds(PolygonalLibrary& mesh);
 
     bool ImportCell2Ds(PolygonalLibrary& mesh);
+
+    bool CheckLengthEdge(PolygonalLibrary& mesh);
+
+    bool CheckNonZeroArea(PolugonalLibrary& mesh);
 }

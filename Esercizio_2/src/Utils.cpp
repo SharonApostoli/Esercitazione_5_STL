@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
 namespace PolygonalLibrary
 {
@@ -199,7 +200,7 @@ bool ImportCell2Ds(PolygonalLibrary&  mesh)
         getline(converter, place, ';');
         numVert = stoul(place);
 
-        array<unsigned int, numVert> vertices;
+        vector<unsigned int> vertices (numVert);
         for(unsigned int i = 0; i < numVert; i++)
         {
             getline(converter, place, ';');
@@ -210,7 +211,7 @@ bool ImportCell2Ds(PolygonalLibrary&  mesh)
         getline(converter, place, ';');
         numEdges = stoul(place);
 
-        array<unsigned int, numEdges> edges;
+        vector<unsigned int> edges(numEdges);
         for(unsigned int i = 0; i < numEdges; i++)
         {
             getline(converter, place, ';');
@@ -222,6 +223,70 @@ bool ImportCell2Ds(PolygonalLibrary&  mesh)
         mesh.Cell2DsEdges.push_back(edges);
     }
 
+    return true;
+}
+
+bool CheckLengthEdge(PolygonalLibrary& mesh)
+{
+    for(unsigned int i = 0; i < mesh.NumCell1Ds; i++)
+    {
+        unsigned int originId = mesh.Cell1DsExtrema(0, i);
+        unsigned int endId = mesh.Cell1DsExtrema(1, i);
+
+        Vector2d origin = mesh.Cell0DsCoordinates.col(originId);
+        Vector2D end = mesh.Cell0DsCoordinates.col(endId);
+
+        double length = (end - origin).norm();
+
+        if(length == 0.0)
+        {
+            cerr << "Edge" << i << "has length equal to zero" << endl;
+            return false;
+        }
+    }
+    return true;
+    
+}
+
+bool CheckNonZeroArea(PolugonalLibrary& mesh)
+{
+    for(unsigned int i = 0; i < mesh.NumCell2Ds; i++)
+    {
+        const auto& vertId = mesh.Cell2DsVertices[i];
+        if(vertId.size() < 3)
+        {
+            cerr << "Polygon " << i << "has less than 3 vertices!" << endl;
+            return false;
+        }
+
+        double area = 0.0;
+
+        for(size_t j = 0; j < vertId.size(); j++)
+        {
+            unsigned int id1 = vertId[j];
+            unsigned int id2 = vertId[(j + 1) % vertId.size()];
+
+            double x1 = mesh.Cell0DsCoordinates(0, id1);
+            double y1 = mesh.Cell0DsCoordinates(1, id1);
+            double x2 = mesh.Cell0DsCoordinates(0, id2);
+            double y2 = mesh.Cell0DsCoordinates(1, id2);
+
+            area += (x1 * y2) - (x2 * y1);
+        }
+
+        area = (abs(area)) * 0.5;
+
+        if(area == 0)
+        {
+            cerr << "The area is zero!" << endl;
+            return false;
+        }
+        else if(area < 1e-10)
+        {
+            cerr << "The area is near-zero!" << endl;
+            return false;
+        }
+    }
     return true;
 }
 
